@@ -49,7 +49,7 @@ router.post("/signup", async (req, res) => {
       html: `
         <h2>Hello ${name} ,ClinixNote</h2>
         <p>Click the link below to verify your email:</p>
-        <a href="http://localhost:5173/verify-email/${emailVerifyToken}">Verify Email</a>
+        <a href="https://augmedix.onrender.com/verify-email/${emailVerifyToken}">Verify Email</a>
       `,
     };
 
@@ -141,7 +141,7 @@ router.post("/forgot-password", async (req, res) => {
             from: process.env.EMAIL_USER,
             to: user.email,
             subject: "Password Reset",
-            text: `To reset your password, click on the following link: http://localhost:5173/reset-password/${resetToken}`,
+            text: `To reset your password, click on the following link: https://augmedix.onrender.com/reset-password/${resetToken}`,
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
@@ -254,7 +254,7 @@ router.post("/admin/add-doctor", async (req, res) => {
       html: `
         <h2>Welcome Dr. ${name}</h2>
         <p>Verify your email to activate your ClinixNote doctor account:</p>
-        <a href="http://localhost:5173/verify-email/${emailVerifyToken}">Verify Email</a>
+        <a href="https://augmedix.onrender.com/verify-email/${emailVerifyToken}">Verify Email</a>
       `,
     };
 

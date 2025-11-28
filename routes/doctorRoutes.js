@@ -97,7 +97,7 @@ router.post('/approve/:id', async (req, res) => {
       html: `
         <h2>Welcome Dr. ${doctor.name}</h2>
         <p>Your application has been approved. Please verify your email to activate your account:</p>
-        <a href="http://localhost:5173/verify-email/${doctor.emailVerifyToken}">Verify Email</a>
+        <a href="https://augmedix.onrender.com/verify-email/${doctor.emailVerifyToken}">Verify Email</a>
       `,
     };
 
