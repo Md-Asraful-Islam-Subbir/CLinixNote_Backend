@@ -5,6 +5,7 @@ import User from "../models/User.js";
 import DoctorSchedule from '../models/DoctorSchedule.js';
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import Payment from "../models/paymentModel.js";
 import authMiddleware from "../middleware/authMiddleware.js";
 const router = express.Router();
 
@@ -81,14 +82,33 @@ router.get("/timeslots", async (req, res) => {
 });
 
 // ✅ Fetch all quick appointments
+// Backend: appointments route
 router.get("/appointments", async (req, res) => {
   try {
     const appointments = await QuickAppointment.find().sort({ createdAt: -1 });
-    res.json(appointments);
+
+    // Map appointments with payment status
+    const appointmentsWithPayment = await Promise.all(
+      appointments.map(async (appt) => {
+        const payment = await Payment.findOne({
+          patient_name: appt.name,
+          patient_contact: appt.contact,
+        });
+
+        return {
+          ...appt.toObject(),
+          payment_status: payment ? "Paid" : "Unpaid",
+        };
+      })
+    );
+
+    res.json(appointmentsWithPayment); // Only send response once
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: "Failed to fetch appointments" });
   }
 });
+
 // In your appointment confirmation route
 router.put("/appointments/:id/confirm", async (req, res) => {
   try {
@@ -227,5 +247,13 @@ router.delete("/appointments/:id/decline", async (req, res) => {
     res.status(500).json({ error: "Failed to cancel appointment" });
   }
 });
-
+router.get("/total", async (req, res) => {
+  try {
+    const totalAppointments = await QuickAppointment.countDocuments();
+    res.json({ total: totalAppointments });
+  } catch (err) {
+    console.error("Error fetching total appointments:", err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
 export default router;

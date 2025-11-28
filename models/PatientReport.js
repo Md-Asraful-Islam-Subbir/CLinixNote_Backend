@@ -6,15 +6,6 @@ const audioSchema = new mongoose.Schema({
   type: String,
   date: { type: Date, default: Date.now }
 });
-const historyEntrySchema = new mongoose.Schema({
-  text: String,
-  date: { type: Date, default: Date.now },
-});
-
-const examFindingSchema = new mongoose.Schema({
-  finding: String,
-  date: { type: Date, default: Date.now },
-});
 
 const documentSchema = new mongoose.Schema({
   name: String,
@@ -29,10 +20,10 @@ const documentSchema = new mongoose.Schema({
 
 const prescriptionSchema = new mongoose.Schema({
   content: String,
-  date: String,
+  date: { type: Date, default: Date.now },
   time: String,
   doctor: String,
-  datetime: String,
+  datetime: { type: Date, default: Date.now }
 });
 
 const analysisResultSchema = new mongoose.Schema({
@@ -40,7 +31,10 @@ const analysisResultSchema = new mongoose.Schema({
   result: String,
   date: { type: Date, default: Date.now }
 });
-
+const textEntrySchema = new mongoose.Schema({
+  content: String,
+  date: { type: Date, default: Date.now }
+});
 const patientReportSchema = new mongoose.Schema({
   patientId: { type: String, required: true },
   patientName: String,
@@ -50,10 +44,10 @@ const patientReportSchema = new mongoose.Schema({
   procedure: String,
   image: String,
 
-  notes: [String],
-  history: [historyEntrySchema],
+  notes: [textEntrySchema],
+  history: [textEntrySchema],
+  examFindings: [textEntrySchema],
   transcription: [String],
-  examFindings: [examFindingSchema],
 
   audioUrl: [audioSchema],
   documents: [documentSchema],

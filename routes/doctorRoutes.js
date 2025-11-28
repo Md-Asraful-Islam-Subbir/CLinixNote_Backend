@@ -57,7 +57,7 @@ router.post('/doctor/application', async (req, res) => {
   }
 });
 
-router.get('/doctor/applications', async (req, res) => {
+router.get('/applications', async (req, res) => {
   try {
     const pendingDoctors = await User.find({ role: "Doctor", status: "Pending" });
     res.status(200).json(pendingDoctors);
@@ -65,7 +65,7 @@ router.get('/doctor/applications', async (req, res) => {
     res.status(500).json({ message: "Failed to fetch doctor applications." });
   }
 });
-router.post('/doctor/approve/:id', async (req, res) => {
+router.post('/approve/:id', async (req, res) => {
   const { id } = req.params;
   const { password } = req.body;
 
@@ -111,7 +111,7 @@ router.post('/doctor/approve/:id', async (req, res) => {
   }
 });
 
-router.post('/doctor/decline/:id', async (req, res) => {
+router.post('/decline/:id', async (req, res) => {
   const { id } = req.params;
 
   try {
@@ -377,4 +377,87 @@ router.get("/me", authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+// Update existing doctor schedule & notify affected patients
+router.put('/schedule/:scheduleId', authMiddleware, async (req, res) => {
+  try {
+    const { scheduleId } = req.params;
+    const { days, slotDuration, validFrom, validTo } = req.body;
+    const doctorId = req.user.id; // logged-in doctor
+
+    const schedule = await DoctorSchedule.findById(scheduleId);
+    if (!schedule) return res.status(404).json({ error: 'Schedule not found' });
+
+    // Update schedule info
+    schedule.days = days;
+    schedule.slotDuration = slotDuration;
+    schedule.validFrom = validFrom;
+    schedule.validTo = validTo;
+    await schedule.save();
+
+    // Delete old slots for this doctor in the updated date range
+    await TimeSlot.deleteMany({
+      doctorId,
+      date: { $gte: new Date(validFrom), $lte: new Date(validTo) }
+    });
+
+    // Generate new slots
+    await generateSlots(schedule);
+
+    // Find affected appointments
+    const affectedAppointments = await QuickAppointment.find({
+      doctor: scheduleId,
+      preferredDate: { $gte: new Date(validFrom), $lte: new Date(validTo) }
+    });
+
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
+    });
+
+    for (const appt of affectedAppointments) {
+      // Check if appointment time is still available
+      const slot = await TimeSlot.findOne({
+        doctorId,
+        date: appt.preferredDate,
+        startTime: appt.preferredTime,
+        isBooked: false
+      });
+
+      if (!slot) {
+        // Assign nearest available slot
+        const newSlot = await TimeSlot.findOne({
+          doctorId,
+          date: appt.preferredDate,
+          isBooked: false
+        }).sort({ startTime: 1 });
+
+        if (newSlot) {
+          const oldTime = appt.preferredTime;
+          appt.preferredTime = newSlot.startTime;
+          await appt.save();
+
+          // Notify patient
+          await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: appt.contact,
+            subject: 'Appointment Time Updated',
+            html: `
+              <p>Hello ${appt.name},</p>
+              <p>Your appointment with Dr. has been rescheduled due to a change in the schedule.</p>
+              <p><strong>Old Time:</strong> ${oldTime}</p>
+              <p><strong>New Time:</strong> ${newSlot.startTime}</p>
+              <p>Thank you for understanding.</p>
+            `
+          });
+        }
+      }
+    }
+
+    res.status(200).json({ message: 'Schedule updated, slots regenerated, affected patients notified.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 export default router;

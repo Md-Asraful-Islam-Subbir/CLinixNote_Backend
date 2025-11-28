@@ -72,32 +72,28 @@ router.post("/", upload.fields([{ name: "documents" }, { name: "audio" }]), asyn
     // ✅ Handle uploaded files
     const uploadedDocs = req.files?.documents
       ? req.files.documents.map(f => ({
-        name: f.originalname,
-        type: f.mimetype,
-        size: f.size,
-        url: `/uploads/documents/${f.filename}`,
-        date: new Date()
-      }))
+          name: f.originalname,
+          type: f.mimetype,
+          size: f.size,
+          url: `/uploads/documents/${f.filename}`,
+          date: new Date()
+        }))
       : [];
 
     const uploadedAudio = req.files?.audio
       ? req.files.audio.map(f => ({
-        name: f.originalname,
-        type: f.mimetype,
-        url: `/uploads/audio/${f.filename}`,
-        date: new Date()
-      }))
+          name: f.originalname,
+          type: f.mimetype,
+          url: `/uploads/audio/${f.filename}`,
+          date: new Date()
+        }))
       : [];
 
     // ✅ Prepare fields to push
     const pushFields = {};
-    if (notes) pushFields.notes = [notes];
-    if (req.body.history) {
-      report.history.push(JSON.parse(req.body.history));
-    }
-    if (req.body.examFindings) {
-      report.examFindings.push(JSON.parse(req.body.examFindings));
-    }
+    if (history) pushFields.history = [{ content: history, date: new Date() }];
+if (examFindings) pushFields.examFindings = [{ content: examFindings, date: new Date() }];
+if (notes) pushFields.notes = [{ content: notes, date: new Date() }];
     if (transcription) pushFields.transcription = [transcription];
     if (uploadedAudio.length) pushFields.audioUrl = uploadedAudio;
     if (uploadedDocs.length) pushFields.documents = uploadedDocs;

@@ -9,7 +9,7 @@ const TimeSlotSchema = new mongoose.Schema({
   bookedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null }
 });
 
-// ✅ Prevent OverwriteModelError
+//  Prevent OverwriteModelError
 const TimeSlot = mongoose.models.TimeSlot || mongoose.model('TimeSlot', TimeSlotSchema);
 export default TimeSlot;
 

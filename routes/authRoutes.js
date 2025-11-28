@@ -287,5 +287,22 @@ console.log(doctor);
     res.status(401).json({ message: "Invalid token" });
   }
 });
-
+router.get("/total", async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments(); // Counts all users in the collection
+    res.json({ total: totalUsers });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+router.get("/total-doctors", async (req, res) => {
+  try {
+    const totalDoctors = await User.countDocuments({ role: "Doctor" }); // only doctors
+    res.json({ total: totalDoctors });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+});
 export default router;

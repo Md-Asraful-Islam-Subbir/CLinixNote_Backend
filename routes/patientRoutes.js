@@ -27,26 +27,33 @@ router.post('/add/:appointmentId', authMiddleware, async (req, res) => {
   try {
     const appointmentId = req.params.appointmentId;
 
-    // Find appointment
+    // Find the appointment
     const appointment = await QuickAppointment.findById(appointmentId);
-    if (!appointment) return res.status(404).json({ message: "Appointment not found" });
+    if (!appointment)
+      return res.status(404).json({ message: "Appointment not found" });
 
-    // Check if patient already exists
-    const existingPatient = await Patient.findOne({ contact: appointment.contact });
-    if (!existingPatient) {
-      // Create patient
-      const newPatient = new Patient({
-        name: appointment.name,
-        contact: appointment.contact,
-        doctor: appointment.doctor,
-        appointmentDate: appointment.preferredDate,
-        appointmentTime: appointment.preferredTime,
-        image: ''
-      });
-      await newPatient.save();
+    // ❗ Check if patient already exists
+    const existingPatient = await Patient.findOne({
+      name: appointment.name,
+      contact: appointment.contact
+    });
+
+    if (existingPatient) {
+      return res.status(400).json({ message: "⚠ Patient already exists!" });
     }
 
-    // Mark as doctor confirmed
+    // Otherwise, create new patient
+    const newPatient = new Patient({
+      name: appointment.name,
+      contact: appointment.contact,
+      doctor: appointment.doctor,
+      appointmentDate: appointment.preferredDate,
+      appointmentTime: appointment.preferredTime,
+      image: ''
+    });
+
+    await newPatient.save();
+
     appointment.doctorConfirmed = true;
     await appointment.save();
 
@@ -56,6 +63,7 @@ router.post('/add/:appointmentId', authMiddleware, async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
 router.get("/my-patients", authMiddleware, async (req, res) => {
   try {
     const doctorName = req.user.name; // from authMiddleware
@@ -147,5 +155,23 @@ router.delete("/", authMiddleware, async (req, res) => {
   }
 });
 
+// ✅ Get a patient's exam findings by patientId
+router.get("/:patientId", async (req, res) => {
+  try {
+    const { patientId } = req.params;
+
+    const report = await PatientReport.findOne({ patientId });
+    if (!report)
+      return res.status(404).json({ message: "Report not found", examFindings: [] });
+
+    res.json({
+      patientId: report.patientId,
+      examFindings: report.examFindings || [],
+    });
+  } catch (error) {
+    console.error("Error fetching report:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 export default router;

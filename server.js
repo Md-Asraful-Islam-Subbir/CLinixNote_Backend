@@ -11,6 +11,9 @@ import reportRoutes from "./routes/reports.js";
 import documentRoutes from "./routes/documents.js";
 import User from "./models/User.js";
 import appointments from "./routes/appointments.js";
+import paymentRoutes from "./routes/paymentRoutes.js";
+import prescriptionRoutes from "./routes/prescription.js";
+
 dotenv.config(); // Load .env variables
 
 const app = express();
@@ -55,6 +58,8 @@ app.use("/api/gpt", gptRoute);
 app.use("/api/report", reportRoutes);
 app.use("/api/documents", documentRoutes);
 app.use("/api/appointments", appointments);
+app.use("/api/payment", paymentRoutes);
+app.use('/api/prescriptions', prescriptionRoutes);
 // Test Route
 app.get("/", (req, res) => {
   res.send("🚀 ClinixNote API is running");

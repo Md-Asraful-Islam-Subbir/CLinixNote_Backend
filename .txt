@@ -1,0 +1,12 @@
+Run this SQL in phpMyAdmin / MySQL:
+
+CREATE TABLE prescriptions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patientName VARCHAR(255),
+  contact VARCHAR(100),
+  doctorName VARCHAR(255),
+  date VARCHAR(50),
+  time VARCHAR(50),
+  prescriptionText TEXT,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
