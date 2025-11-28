@@ -17,7 +17,7 @@ import prescriptionRoutes from "./routes/prescription.js";
 dotenv.config(); // Load .env variables
 
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT;
 
 // Middlewares
 app.use(express.json());
@@ -67,5 +67,5 @@ app.get("/", (req, res) => {
 
 // Start Server
 app.listen(port, () => {
-  console.log(`🚀 Server started on http://localhost:${port}`);
+  console.log(`🚀 Server started on ${port}`);
 });
